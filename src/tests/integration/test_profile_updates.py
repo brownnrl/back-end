@@ -37,6 +37,23 @@ def test_update_profile_frontend_params(
         assert getattr(profile, key) == val
 
 
+def test_update_profile_random_params_update_task_to_pybot(
+        authed_client: test.Client, user: User, random_profile_dict
+):
+    random_profile_dict['military_status'] = 'current'
+    random_profile_dict['slack_id'] = 'slack1234'
+    res = authed_client.patch(
+        reverse("update_profile"), humps.camelize(random_profile_dict)
+    )
+
+    assert res.status_code == 200
+
+    user.refresh_from_db()
+    profile = user.profile
+
+    for key, val in random_profile_dict.items():
+        assert getattr(profile, key) == val
+
 @pytest.mark.parametrize(
     argnames="method, status", argvalues=[("post", 405), ("get", 200), ("patch", 200)]
 )

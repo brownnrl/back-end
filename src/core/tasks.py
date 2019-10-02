@@ -33,12 +33,28 @@ def send_welcome_email(email: str) -> None:
 
 
 @background(schedule=0)
+def send_slack_update(slack_id: str, military_status:str) -> None:
+    try:
+        logger.info(f"Sending slack message after profile update: {slack_id} {military_status}")
+        url = f"{settings.PYBOT_URL}/pybot/api/v1/slack/update"
+        headers = {"Authorization": f"Bearer {settings.PYBOT_AUTH_TOKEN}"}
+        res = requests.post(url, json={"slack_id": slack_id, "military_status": military_status}, headers=headers)
+
+        logger.info("Slack update response:", res)
+    except Exception as e:  # pragma: no cover
+        logger.exception(
+            f"Exception while trying to send slack update for slack id {slack_id}", e
+        )
+
+
+@background(schedule=0)
 def send_slack_invite_job(email: str) -> None:
     """
     Background task that sends pybot a request triggering an invite for
     a newly registered user
 
     :param email: Email the user signed up with
+    :param military_status: Status that the user indicated in their profile
     """
     try:
         logger.info(f"Sending slack invite for email: {email}")

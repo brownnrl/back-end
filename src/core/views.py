@@ -21,6 +21,13 @@ from core.serializers import (
     ProfileSerializer,
     UserSerializer,
 )
+from core.tasks import (
+    send_slack_update,
+)
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 sensitive_param = method_decorator(
     sensitive_post_parameters("password"), name="dispatch"
@@ -53,6 +60,22 @@ class UpdateProfile(RetrieveUpdateAPIView):
         obj = self.request.user.profile
         self.check_object_permissions(self.request, obj)
         return obj
+
+    def perform_update(self, serializer):
+        """
+        Overrides the `perform_update` to check if both slack_id
+        and military status have been updated and trigger a task
+        to communicate that update to the slack bot
+        """
+        mil_status_before_update = serializer.instance.military_status
+        slack_id_before_update = serializer.instance.slack_id
+        instance = serializer.save()
+        mil_status = instance.military_status
+        slack_id = instance.slack_id
+        if (((slack_id != slack_id_before_update) or
+             (mil_status_before_update != mil_status))
+             and slack_id and mil_status):
+            send_slack_update(slack_id, mil_status)
 
 
 class AdminUpdateProfile(RetrieveUpdateAPIView):
@@ -109,6 +132,7 @@ class UserView(RetrieveUpdateAPIView):
         self.check_object_permissions(self.request, obj)
         return obj
 
+             
 
 @sensitive_param
 class RegisterView(BaseRegisterView):
