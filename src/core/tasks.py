@@ -54,7 +54,6 @@ def send_slack_invite_job(email: str) -> None:
     a newly registered user
 
     :param email: Email the user signed up with
-    :param military_status: Status that the user indicated in their profile
     """
     try:
         logger.info(f"Sending slack invite for email: {email}")

@@ -83,5 +83,6 @@ def update_profile_params(request):
 @pytest.fixture(params=factory.build_batch(dict, 5, FACTORY_CLASS=f.ProfileFactory))
 def random_profile_dict(request):
     profile = request.param
-    profile.pop("user")
+    if "user" in profile:
+        del profile["user"]
     return request.param
